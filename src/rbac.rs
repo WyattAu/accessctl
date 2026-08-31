@@ -76,21 +76,21 @@ impl PolicySet {
 
         // Admin can do everything
         let admin_policy = cedar_policy::Policy::parse(
-            None,
+            Some(cedar_policy::PolicyId::new("admin-permit")),
             r#"permit(principal in AdminRole::"", action, resource);"#,
         ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
         ps.add(admin_policy).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
 
         // Editor can view, edit, create
         let editor_policy = cedar_policy::Policy::parse(
-            None,
+            Some(cedar_policy::PolicyId::new("editor-permit")),
             r#"permit(principal in EditorRole::"", action in [Action::"view", Action::"edit", Action::"create"], resource);"#,
         ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
         ps.add(editor_policy).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
 
         // Viewer can only view
         let viewer_policy = cedar_policy::Policy::parse(
-            None,
+            Some(cedar_policy::PolicyId::new("viewer-permit")),
             r#"permit(principal in ViewerRole::"", action == Action::"view", resource);"#,
         ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
         ps.add(viewer_policy).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;

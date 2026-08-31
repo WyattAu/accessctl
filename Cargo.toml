@@ -16,6 +16,9 @@ tokio = "1"
 axum = { version = "0.8", optional = true }
 tokenkit = { path = "../tokenkit", optional = true }
 
+[dev-dependencies]
+proptest = "1"
+
 [features]
 default = ["cedar"]
 cedar = ["dep:cedar-policy"]
