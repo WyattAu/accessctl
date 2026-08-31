@@ -4,19 +4,16 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum AccessError {
     /// The request lacks valid authentication.
-    #[error("unauthorized")]
-    Unauthorized,
-
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
     /// The authenticated principal lacks required permissions.
-    #[error("forbidden")]
-    Forbidden,
-
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
     /// Failed to parse a Cedar policy.
-    #[error("policy parse error: {0}")]
+    #[error("Policy parse error: {0}")]
     PolicyParse(String),
-
     /// The Cedar schema is invalid.
-    #[error("invalid schema: {0}")]
+    #[error("Schema invalid: {0}")]
     SchemaInvalid(String),
 }
 
@@ -24,15 +21,13 @@ pub enum AccessError {
 impl axum::response::IntoResponse for AccessError {
     fn into_response(self) -> axum::response::Response {
         use axum::http::StatusCode;
-        use axum::response::IntoResponse;
-
-        let status = match &self {
-            Self::Unauthorized => StatusCode::UNAUTHORIZED,
-            Self::Forbidden => StatusCode::FORBIDDEN,
-            Self::PolicyParse(_) | Self::SchemaInvalid(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        use axum::Json;
+        use serde_json::json;
+        let (status, message) = match &self {
+            Self::Unauthorized(_) => (StatusCode::UNAUTHORIZED, self.to_string()),
+            Self::Forbidden(_) => (StatusCode::FORBIDDEN, self.to_string()),
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()),
         };
-
-        let body = axum::Json(serde_json::json!({ "error": self.to_string() }));
-        (status, body).into_response()
+        (status, Json(json!({ "error": message }))).into_response()
     }
 }

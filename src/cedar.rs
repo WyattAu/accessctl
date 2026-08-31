@@ -1,96 +1,114 @@
-use cedar_policy::Schema;
+use cedar_policy::{Authorizer, Context, Decision, Entities, Entity, EntityId, EntityTypeName, EntityUid, Request};
+use std::str::FromStr;
+use std::collections::{HashMap, HashSet};
 
-use crate::error::AccessError;
 use crate::rbac::Role;
 
-/// Generates a Cedar schema from role definitions.
-///
-/// The schema defines `Role` and `Action` entity types that Cedar uses
-/// for authorization decisions.
-pub fn generate_schema(roles: &[Role]) -> Result<Schema, AccessError> {
-    let mut action_defs = Vec::new();
-
-    // Collect all unique permissions across roles
-    let mut all_permissions: Vec<String> = roles
-        .iter()
-        .flat_map(|r| r.permissions.clone())
-        .collect();
-    all_permissions.sort();
-    all_permissions.dedup();
-
-    for perm in &all_permissions {
-        action_defs.push(format!("    \"{perm}\""));
+#[allow(dead_code)]
+/// Generate Cedar schema string for the RBAC model.
+pub fn generate_schema() -> &'static str {
+    r#"
+    namespace AccessCtl {
+        entity AdminRole {};
+        entity EditorRole {};
+        entity ViewerRole {};
+        entity User {
+            role: AdminRole | EditorRole | ViewerRole,
+        };
+        entity Resource {};
+        action "view" appliesTo {
+            principal: [AdminRole, EditorRole, ViewerRole],
+            resource: Resource,
+        };
+        action "edit" appliesTo {
+            principal: [AdminRole, EditorRole],
+            resource: Resource,
+        };
+        action "create" appliesTo {
+            principal: [AdminRole, EditorRole],
+            resource: Resource,
+        };
+        action "delete" appliesTo {
+            principal: [AdminRole],
+            resource: Resource,
+        };
     }
-
-    let schema_str = format!(
-        r#"
-namespace AccessCtl {{
-
-  entity Role;
-  entity Resource;
-
-  action {} {{
-    principal resources: [Resource],
-    resource: Resource
-  }};
-}}
-"#,
-        if action_defs.is_empty() {
-            "{}".to_string()
-        } else {
-            format!(
-                "{} {}",
-                "{",
-                all_permissions
-                    .iter()
-                    .map(|p| format!("\"{}\"", p))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        }
-    );
-
-    // Parse the schema, falling back to a minimal valid schema on error
-    Schema::from_json_str(&schema_str).map_err(|e| AccessError::SchemaInvalid(e.to_string()))
+    "#
 }
 
-/// Performs a Cedar authorization check.
-///
-/// Returns `Ok(true)` if the request is permitted, `Ok(false)` if denied,
-/// or `Err` if the evaluation fails.
-pub fn authorize(
-    authorizer: &cedar_policy::Authorizer,
-    schema: &Schema,
-    principal: &str,
-    action: &str,
-    resource: &str,
-) -> Result<bool, AccessError> {
-    use cedar_policy::{Context, Entities, EntityUid, Request};
+/// Create Cedar entities for a user with a role.
+pub fn create_entities(user_id: &str, role: &Role) -> Result<Entities, crate::AccessError> {
+    let role_uid = EntityUid::from_type_name_and_id(
+        EntityTypeName::from_str(role.cedar_type_name()).unwrap(),
+        EntityId::from_str(user_id).unwrap(),
+    );
 
-    let principal_uid: EntityUid = format!("AccessCtl::Role::\"{}\"", principal)
-        .parse()
-        .map_err(|e: cedar_policy::ParseErrors| AccessError::PolicyParse(e.to_string()))?;
-    let action_uid: EntityUid = format!("AccessCtl::Action::\"{}\"", action)
-        .parse()
-        .map_err(|e: cedar_policy::ParseErrors| AccessError::PolicyParse(e.to_string()))?;
-    let resource_uid: EntityUid = format!("AccessCtl::Resource::\"{}\"", resource)
-        .parse()
-        .map_err(|e: cedar_policy::ParseErrors| AccessError::PolicyParse(e.to_string()))?;
+    let user_uid = EntityUid::from_type_name_and_id(
+        EntityTypeName::from_str("User").unwrap(),
+        EntityId::from_str(user_id).unwrap(),
+    );
+
+    let mut parents = HashSet::new();
+    parents.insert(role_uid);
+
+    let user_entity = Entity::new(user_uid, HashMap::new(), parents)
+        .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
+
+    let role_entity = Entity::new(
+        EntityUid::from_type_name_and_id(
+            EntityTypeName::from_str(role.cedar_type_name()).unwrap(),
+            EntityId::from_str(user_id).unwrap(),
+        ),
+        HashMap::new(),
+        HashSet::new(),
+    ).map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
+
+    let resource_uid = EntityUid::from_type_name_and_id(
+        EntityTypeName::from_str("Resource").unwrap(),
+        EntityId::from_str("*").unwrap(),
+    );
+    let resource_entity = Entity::new(resource_uid, HashMap::new(), HashSet::new())
+        .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
+
+    Entities::from_entities(
+        vec![user_entity, role_entity, resource_entity],
+        None,
+    ).map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))
+}
+
+/// Authorize a request against the policy set.
+pub fn authorize(
+    user_id: &str,
+    role: &Role,
+    action: &str,
+    resource_id: &str,
+    policy_set: &crate::rbac::PolicySet,
+) -> Result<bool, crate::AccessError> {
+    let principal = EntityUid::from_type_name_and_id(
+        EntityTypeName::from_str("User").unwrap(),
+        EntityId::from_str(user_id).unwrap(),
+    );
+    let action_uid = EntityUid::from_type_name_and_id(
+        EntityTypeName::from_str("Action").unwrap(),
+        EntityId::from_str(action).unwrap(),
+    );
+    let resource = EntityUid::from_type_name_and_id(
+        EntityTypeName::from_str("Resource").unwrap(),
+        EntityId::from_str(resource_id).unwrap(),
+    );
 
     let request = Request::new(
-        principal_uid,
+        principal,
         action_uid,
-        resource_uid,
+        resource,
         Context::empty(),
-        Some(schema),
-    )
-    .map_err(|e| AccessError::PolicyParse(e.to_string()))?;
+        None,
+    ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
 
-    let entities = Entities::empty();
-    let result = authorizer.is_authorized(&request, &cedar_policy::PolicySet::new(), &entities);
+    let entities = create_entities(user_id, role)?;
 
-    match result.decision() {
-        cedar_policy::Decision::Allow => Ok(true),
-        cedar_policy::Decision::Deny => Ok(false),
-    }
+    let authorizer = Authorizer::new();
+    let response = authorizer.is_authorized(&request, policy_set.inner(), &entities);
+
+    Ok(matches!(response.decision(), Decision::Allow))
 }

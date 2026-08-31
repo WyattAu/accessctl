@@ -1,139 +1,103 @@
-use std::collections::HashMap;
+use std::fmt;
 
-use serde::{Deserialize, Serialize};
-
-/// A role in the access control system with associated permissions.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Role {
-    /// Unique identifier for this role (e.g., "admin", "editor", "viewer").
-    pub name: String,
-    /// Permissions granted by this role (e.g., "read", "write", "delete").
-    pub permissions: Vec<String>,
-    /// Optional parent roles this role inherits from.
-    pub parents: Vec<String>,
+/// Roles in the RBAC system.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+pub enum Role {
+    /// Read-only access.
+    Viewer,
+    /// Read and write access.
+    Editor,
+    /// Full administrative access.
+    Admin,
 }
 
-impl std::fmt::Display for Role {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+impl fmt::Display for Role {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Role::Viewer => write!(f, "Viewer"),
+            Role::Editor => write!(f, "Editor"),
+            Role::Admin => write!(f, "Admin"),
+        }
     }
 }
 
 impl Role {
-    /// Creates a new role with no parents.
-    pub fn new(name: impl Into<String>, permissions: Vec<String>) -> Self {
-        Self {
-            name: name.into(),
-            permissions,
-            parents: Vec::new(),
-        }
+    /// Returns true if `self` has at least the privileges of `other`.
+    pub fn has_at_least(&self, other: &Role) -> bool {
+        self >= other
     }
 
-    /// Sets the parent roles for inheritance.
-    pub fn with_parents(mut self, parents: Vec<String>) -> Self {
-        self.parents = parents;
-        self
+    /// Cedar entity type name for this role.
+    pub fn cedar_type_name(&self) -> &'static str {
+        match self {
+            Role::Viewer => "ViewerRole",
+            Role::Editor => "EditorRole",
+            Role::Admin => "AdminRole",
+        }
     }
 }
 
-/// Role hierarchy for resolving inherited permissions.
+/// Role hierarchy with permission resolution.
+#[allow(dead_code)]
 pub struct RoleHierarchy {
-    roles: HashMap<String, Role>,
+    roles: Vec<Role>,
+}
+
+impl Default for RoleHierarchy {
+    fn default() -> Self {
+        Self { roles: vec![Role::Viewer, Role::Editor, Role::Admin] }
+    }
 }
 
 impl RoleHierarchy {
-    /// Creates a new role hierarchy from a list of roles.
-    pub fn new(roles: Vec<Role>) -> Self {
-        let roles_map = roles.into_iter().map(|r| (r.name.clone(), r)).collect();
-        Self { roles: roles_map }
-    }
+    /// Creates a new role hierarchy with default roles.
+    pub fn new() -> Self { Self::default() }
 
-    /// Resolves all permissions for a role, including inherited permissions.
-    pub fn resolve_permissions(&self, role_name: &str) -> Vec<String> {
-        let mut permissions = Vec::new();
-        let mut visited = std::collections::HashSet::new();
-        self.resolve_permissions_inner(role_name, &mut permissions, &mut visited);
-        permissions.sort();
-        permissions.dedup();
-        permissions
-    }
-
-    fn resolve_permissions_inner(
-        &self,
-        role_name: &str,
-        permissions: &mut Vec<String>,
-        visited: &mut std::collections::HashSet<String>,
-    ) {
-        if !visited.insert(role_name.to_string()) {
-            return;
+    /// Check if a role has permission for an action.
+    pub fn check_permission(&self, role: &Role, action: &str) -> bool {
+        match (role, action) {
+            (Role::Admin, _) => true,
+            (Role::Editor, "view" | "edit" | "create") => true,
+            (Role::Viewer, "view") => true,
+            _ => false,
         }
-
-        if let Some(role) = self.roles.get(role_name) {
-            permissions.extend(role.permissions.clone());
-            for parent in &role.parents {
-                self.resolve_permissions_inner(parent, permissions, visited);
-            }
-        }
-    }
-
-    /// Checks whether a role has a specific permission (including inherited).
-    pub fn has_permission(&self, role_name: &str, permission: &str) -> bool {
-        self.resolve_permissions(role_name)
-            .iter()
-            .any(|p| p == permission)
     }
 }
 
-/// A policy set for Cedar policy evaluation.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cedar policy set generated from role hierarchy.
 pub struct PolicySet {
-    policies: Vec<String>,
+    inner: cedar_policy::PolicySet,
 }
 
 impl PolicySet {
-    /// Creates an empty policy set.
-    pub fn new() -> Self {
-        Self {
-            policies: Vec::new(),
-        }
+    /// Create a policy set from the default role hierarchy.
+    pub fn from_default_hierarchy() -> Result<Self, crate::AccessError> {
+        let mut ps = cedar_policy::PolicySet::new();
+
+        // Admin can do everything
+        let admin_policy = cedar_policy::Policy::parse(
+            None,
+            r#"permit(principal in AdminRole::"", action, resource);"#,
+        ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
+        ps.add(admin_policy).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
+
+        // Editor can view, edit, create
+        let editor_policy = cedar_policy::Policy::parse(
+            None,
+            r#"permit(principal in EditorRole::"", action in [Action::"view", Action::"edit", Action::"create"], resource);"#,
+        ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
+        ps.add(editor_policy).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
+
+        // Viewer can only view
+        let viewer_policy = cedar_policy::Policy::parse(
+            None,
+            r#"permit(principal in ViewerRole::"", action == Action::"view", resource);"#,
+        ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
+        ps.add(viewer_policy).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
+
+        Ok(Self { inner: ps })
     }
 
-    /// Creates a policy set from existing Cedar policy strings.
-    pub fn from_policies(policies: Vec<String>) -> Self {
-        Self { policies }
-    }
-
-    /// Adds a Cedar policy to the set.
-    pub fn add_policy(&mut self, policy: String) {
-        self.policies.push(policy);
-    }
-
-    /// Generates Cedar policy strings from a role hierarchy.
-    ///
-    /// Each role becomes a Cedar policy allowing its permissions on its entity.
-    pub fn from_role_hierarchy(hierarchy: &RoleHierarchy, roles: &[Role]) -> Self {
-        let mut policies = Vec::new();
-
-        for role in roles {
-            let permissions = hierarchy.resolve_permissions(&role.name);
-            for perm in &permissions {
-                policies.push(format!(
-                    r#"permit(principal == Role::"{role}", action == Action::"{perm}", resource);"#
-                ));
-            }
-        }
-
-        Self { policies }
-    }
-
-    /// Returns the policy strings.
-    pub fn policies(&self) -> &[String] {
-        &self.policies
-    }
-}
-
-impl Default for PolicySet {
-    fn default() -> Self {
-        Self::new()
-    }
+    /// Returns the inner Cedar policy set.
+    pub fn inner(&self) -> &cedar_policy::PolicySet { &self.inner }
 }

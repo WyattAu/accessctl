@@ -9,6 +9,7 @@ dependencies = [
  "axum",
  "cedar-policy",
  "serde",
+ "serde_json",
  "thiserror",
  "tokenkit",
  "tokio",
