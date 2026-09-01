@@ -6,6 +6,8 @@ rust-version = "1.85"
 description = "Role-based access control for Rust — Cedar policy engine integration with typed roles and Axum middleware"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/WyattAu/accessctl"
+keywords = ["rbac", "cedar", "authorization"]
+categories = ["accessibility"]
 exclude = ["/target"]
 
 [dependencies]
