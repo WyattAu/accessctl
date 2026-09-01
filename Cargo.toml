@@ -5,6 +5,8 @@ edition = "2024"
 rust-version = "1.85"
 description = "Role-based access control for Rust — Cedar policy engine integration with typed roles and Axum middleware"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/WyattAu/accessctl"
+exclude = ["/target"]
 
 [dependencies]
 cedar-policy = { version = "4", optional = true }
@@ -14,10 +16,15 @@ thiserror = "2"
 tokio = "1"
 
 axum = { version = "0.8", optional = true }
-tokenkit = { path = "../tokenkit", optional = true }
+tokenkit = { version = "0.1.0", path = "../tokenkit", optional = true }
+
+[[bench]]
+name = "accessctl_bench"
+harness = false
 
 [dev-dependencies]
 proptest = "1"
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [features]
 default = ["cedar"]
