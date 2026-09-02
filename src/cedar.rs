@@ -39,13 +39,17 @@ pub fn generate_schema() -> &'static str {
 /// Create Cedar entities for a user with a role.
 pub fn create_entities(user_id: &str, role: &Role) -> Result<Entities, crate::AccessError> {
     let role_uid = EntityUid::from_type_name_and_id(
-        EntityTypeName::from_str(role.cedar_type_name()).unwrap(),
-        EntityId::from_str(user_id).unwrap(),
+        EntityTypeName::from_str(role.cedar_type_name())
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str(user_id)
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
 
     let user_uid = EntityUid::from_type_name_and_id(
-        EntityTypeName::from_str("User").unwrap(),
-        EntityId::from_str(user_id).unwrap(),
+        EntityTypeName::from_str("User")
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str(user_id)
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
 
     let mut parents = HashSet::new();
@@ -56,16 +60,20 @@ pub fn create_entities(user_id: &str, role: &Role) -> Result<Entities, crate::Ac
 
     let role_entity = Entity::new(
         EntityUid::from_type_name_and_id(
-            EntityTypeName::from_str(role.cedar_type_name()).unwrap(),
-            EntityId::from_str(user_id).unwrap(),
+            EntityTypeName::from_str(role.cedar_type_name())
+                .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+            EntityId::from_str(user_id)
+                .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
         ),
         HashMap::new(),
         HashSet::new(),
     ).map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
 
     let resource_uid = EntityUid::from_type_name_and_id(
-        EntityTypeName::from_str("Resource").unwrap(),
-        EntityId::from_str("*").unwrap(),
+        EntityTypeName::from_str("Resource")
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str("*")
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
     let resource_entity = Entity::new(resource_uid, HashMap::new(), HashSet::new())
         .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
@@ -85,16 +93,22 @@ pub fn authorize(
     policy_set: &crate::rbac::PolicySet,
 ) -> Result<bool, crate::AccessError> {
     let principal = EntityUid::from_type_name_and_id(
-        EntityTypeName::from_str("User").unwrap(),
-        EntityId::from_str(user_id).unwrap(),
+        EntityTypeName::from_str("User")
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str(user_id)
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
     let action_uid = EntityUid::from_type_name_and_id(
-        EntityTypeName::from_str("Action").unwrap(),
-        EntityId::from_str(action).unwrap(),
+        EntityTypeName::from_str("Action")
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str(action)
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
     let resource = EntityUid::from_type_name_and_id(
-        EntityTypeName::from_str("Resource").unwrap(),
-        EntityId::from_str(resource_id).unwrap(),
+        EntityTypeName::from_str("Resource")
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str(resource_id)
+            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
 
     let request = Request::new(
