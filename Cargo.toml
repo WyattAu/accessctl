@@ -33,3 +33,7 @@ default = ["cedar"]
 cedar = ["dep:cedar-policy"]
 axum = ["dep:axum"]
 tokenkit = ["dep:tokenkit"]
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
