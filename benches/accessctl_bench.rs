@@ -1,5 +1,8 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use accessctl::{Role, RoleHierarchy, PolicySet};
+// Benchmarks run fixed, infallible inputs; unwrapping setup results is safe here.
+#![allow(clippy::unwrap_used)]
+
+use accessctl::{PolicySet, Role, RoleHierarchy};
+use criterion::{Criterion, criterion_group, criterion_main};
 
 fn bench_role_ordering(c: &mut Criterion) {
     c.bench_function("role_ordering", |b| {
@@ -33,7 +36,7 @@ fn bench_role_cedar_type_name(c: &mut Criterion) {
 
 fn bench_role_hierarchy_creation(c: &mut Criterion) {
     c.bench_function("role_hierarchy_creation", |b| {
-        b.iter(|| RoleHierarchy::new());
+        b.iter(RoleHierarchy::new);
     });
 }
 

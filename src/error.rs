@@ -20,8 +20,8 @@ pub enum AccessError {
 #[cfg(feature = "axum")]
 impl axum::response::IntoResponse for AccessError {
     fn into_response(self) -> axum::response::Response {
-        use axum::http::StatusCode;
         use axum::Json;
+        use axum::http::StatusCode;
         use serde_json::json;
         let (status, message) = match &self {
             Self::Unauthorized(_) => (StatusCode::UNAUTHORIZED, self.to_string()),

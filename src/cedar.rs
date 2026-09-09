@@ -1,6 +1,8 @@
-use cedar_policy::{Authorizer, Context, Decision, Entities, Entity, EntityId, EntityTypeName, EntityUid, Request};
-use std::str::FromStr;
+use cedar_policy::{
+    Authorizer, Context, Decision, Entities, Entity, EntityId, EntityTypeName, EntityUid, Request,
+};
 use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 
 use crate::rbac::Role;
 
@@ -67,21 +69,19 @@ pub fn create_entities(user_id: &str, role: &Role) -> Result<Entities, crate::Ac
         ),
         HashMap::new(),
         HashSet::new(),
-    ).map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
+    )
+    .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
 
     let resource_uid = EntityUid::from_type_name_and_id(
         EntityTypeName::from_str("Resource")
             .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
-        EntityId::from_str("*")
-            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str("*").map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
     let resource_entity = Entity::new(resource_uid, HashMap::new(), HashSet::new())
         .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?;
 
-    Entities::from_entities(
-        vec![user_entity, role_entity, resource_entity],
-        None,
-    ).map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))
+    Entities::from_entities(vec![user_entity, role_entity, resource_entity], None)
+        .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))
 }
 
 /// Authorize a request against the policy set.
@@ -101,8 +101,7 @@ pub fn authorize(
     let action_uid = EntityUid::from_type_name_and_id(
         EntityTypeName::from_str("Action")
             .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
-        EntityId::from_str(action)
-            .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
+        EntityId::from_str(action).map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
     let resource = EntityUid::from_type_name_and_id(
         EntityTypeName::from_str("Resource")
@@ -111,13 +110,8 @@ pub fn authorize(
             .map_err(|e| crate::AccessError::SchemaInvalid(e.to_string()))?,
     );
 
-    let request = Request::new(
-        principal,
-        action_uid,
-        resource,
-        Context::empty(),
-        None,
-    ).map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
+    let request = Request::new(principal, action_uid, resource, Context::empty(), None)
+        .map_err(|e| crate::AccessError::PolicyParse(e.to_string()))?;
 
     let entities = create_entities(user_id, role)?;
 

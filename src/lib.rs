@@ -4,12 +4,15 @@
 
 //! Role-based access control for Rust with Cedar policy engine integration.
 
+#[cfg(feature = "cedar")]
+mod cedar;
 mod error;
 mod rbac;
-mod cedar;
 
 pub use error::AccessError;
-pub use rbac::{Role, RoleHierarchy, PolicySet};
+#[cfg(feature = "cedar")]
+pub use rbac::PolicySet;
+pub use rbac::{Role, RoleHierarchy};
 
 /// Axum middleware for role-based access control.
 #[cfg(feature = "axum")]
@@ -78,11 +81,7 @@ mod proptest_tests {
     use proptest::prelude::*;
 
     fn arb_role() -> impl Strategy<Value = Role> {
-        prop_oneof![
-            Just(Role::Viewer),
-            Just(Role::Editor),
-            Just(Role::Admin),
-        ]
+        prop_oneof![Just(Role::Viewer), Just(Role::Editor), Just(Role::Admin),]
     }
 
     proptest! {
@@ -105,6 +104,7 @@ mod proptest_tests {
             prop_assert!(name.ends_with("Role"));
         }
 
+        #[cfg(feature = "cedar")]
         #[test]
         fn policy_set_creation(_dummy in 0..1u32) {
             let result = PolicySet::from_default_hierarchy();
