@@ -1,4 +1,5 @@
 # accessctl
+[![Estate integration](https://github.com/WyattAu/estate-integration/actions/workflows/ci.yml/badge.svg)](https://github.com/WyattAu/estate-integration/actions/workflows/ci.yml)
 
 [![docs.rs](https://docs.rs/accessctl/badge.svg)](https://docs.rs/accessctl)
 [![crates.io](https://img.shields.io/crates/v/accessctl.svg)](https://crates.io/crates/accessctl)
