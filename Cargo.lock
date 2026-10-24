@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "accessctl"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "axum",
  "cedar-policy",
@@ -2290,9 +2290,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokenkit"
-version = "0.4.1"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e812d02a90e6360c8e443091b3b196a2114cdd384dc52e5865c3e0e1fa23eb4"
+checksum = "4462a10af58c46787b34a586794522cd195e83051a72fc236e4b0973fe474dc2"
 dependencies = [
  "chrono",
  "jsonwebtoken",
