@@ -5,7 +5,7 @@
 [![crates.io](https://img.shields.io/crates/v/accessctl.svg)](https://crates.io/crates/accessctl)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 
-Role-based access control for Rust — Cedar policy engine integration with typed roles and Axum middleware.
+Role-based access control for Rust; Cedar policy engine integration with typed roles and Axum middleware.
 
 ## Purpose
 
@@ -25,9 +25,9 @@ from your Rust role definitions, allowing you to:
 
 ## Features
 
-- **`cedar`** (default) — Cedar policy engine integration
-- **`axum`** — Axum middleware and extractors (`RequireRole`)
-- **`tokenkit`** — Integration with the `tokenkit` crate
+- **`cedar`** (default); Cedar policy engine integration
+- **`axum`**; Axum middleware and extractors (`RequireRole`)
+- **`tokenkit`**; Integration with the `tokenkit` crate
 
 ## Usage
 

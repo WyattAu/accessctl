@@ -1,11 +1,11 @@
-# Threat Model — accessctl
+# Threat Model: accessctl
 
 Reference: STRIDE. Scope: the crate's public API surface. Trust boundary:
 (1) bytes/inputs entering public constructors and parsers, (2) concurrent
-callers sharing interior state. accessctl is an in-process library — it opens
+callers sharing interior state. accessctl is an in-process library; it opens
 no sockets and inherits the embedding process's trust domain.
 
-Purpose: Cedar-policy-backed access control (`accessctl`) — allow/deny decisions over typed principals, actions, resources; Cedar engine is feature-gated
+Purpose: Cedar-policy-backed access control (`accessctl`); allow/deny decisions over typed principals, actions, resources; Cedar engine is feature-gated
 
 ## Assets
 

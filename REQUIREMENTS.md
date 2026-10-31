@@ -1,9 +1,9 @@
-# Requirements — accessctl
+# Requirements: accessctl
 
 Numbered, testable requirements. Every requirement maps to at least one named
 test or doc-comment contract; security-relevant items cite threat-model rows.
 
-Scope: Cedar-policy-backed access control (`accessctl`) — allow/deny decisions over typed principals, actions, resources; Cedar engine is feature-gated
+Scope: Cedar-policy-backed access control (`accessctl`); allow/deny decisions over typed principals, actions, resources; Cedar engine is feature-gated
 
 ## Functional
 
