@@ -7,6 +7,15 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
+ignore = [
+    # RUSTSEC-2023-0071 + RUSTSEC-2026-0387: timing side channels in the
+    # RSA/JWT stack pulled in by the optional `tokenkit` feature. Estate
+    # usage is non-adversarial (first-party service tokens, no
+    # unauthenticated callers of the RSA path). Tracked for upstream
+    # remediation: pattern-standards adr/0001 evidence + SECURITY.md.
+    "RUSTSEC-2023-0071",
+    "RUSTSEC-2026-0387",
+]
 
 [licenses]
 version = 2
