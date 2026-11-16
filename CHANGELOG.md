@@ -7,7 +7,7 @@ Changelog](https://keepachangelog.com/); versions follow [semver](https://semver
 
 ## 0.2.0 - 2026-11-16
 
-- X5 pilot (ADR-0001, pattern-standards): `grants` module — a conservation-spanning
+- X5 pilot (ADR-0001, pattern-standards): `grants` module; a conservation-spanning
   ledger with exactly six mutating operators (issue, split, transfer,
   attenuate, revoke, merge), no setters, and a mechanically checked
   invariant `sum(active) == issued - revoked - attenuated`. Proptest
@@ -18,5 +18,6 @@ Changelog](https://keepachangelog.com/); versions follow [semver](https://semver
 ## [0.1.0] - 2026-09-01
 
 ### Added
+
 - Role-based access control; Cedar policy engine integration.
 - Published to crates.io (2026-09-01).

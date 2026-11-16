@@ -1,4 +1,5 @@
 # accessctl
+
 [![Estate integration](https://github.com/WyattAu/estate-integration/actions/workflows/ci.yml/badge.svg)](https://github.com/WyattAu/estate-integration/actions/workflows/ci.yml)
 
 [![docs.rs](https://docs.rs/accessctl/badge.svg)](https://docs.rs/accessctl)
@@ -94,3 +95,12 @@ let router = Router::new()
 ## License
 
 MIT OR Apache-2.0
+
+## Where the truth lives
+
+| Concern | Source |
+|---|---|
+| Requirements (SC-4) | `REQUIREMENTS.md` |
+| Threat model | `THREAT-MODEL.md` |
+| RBAC roles and policy set | `src/rbac.rs`, `src/cedar.rs` |
+| X5 grant ledger (pilot) | `src/grants.rs`, pattern-standards `adr/0001` |

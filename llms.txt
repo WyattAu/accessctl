@@ -1,0 +1,11 @@
+> llms.txt — accessctl: role-based access control for Rust with Cedar
+> policy engine integration, typed roles, Axum middleware, and an X5
+> conservation-spanning grant ledger pilot. Consume README.md for usage,
+> REQUIREMENTS.md for behavior, THREAT-MODEL.md for the security model.
+
+# accessctl
+
+- [README](README.md): usage, features, examples
+- [REQUIREMENTS](REQUIREMENTS.md): REQ anchors and behavior contracts
+- [THREAT-MODEL](THREAT-MODEL.md): trust boundaries and mitigations
+- [CHANGELOG](CHANGELOG.md): versioned release history
