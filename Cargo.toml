@@ -1,6 +1,6 @@
 [package]
 name = "accessctl"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Role-based access control for Rust: Cedar policy engine integration with typed roles and Axum middleware"

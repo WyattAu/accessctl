@@ -7,9 +7,11 @@
 #[cfg(feature = "cedar")]
 mod cedar;
 mod error;
+mod grants;
 mod rbac;
 
 pub use error::AccessError;
+pub use grants::{GrantError, GrantId, GrantLedger, Subject};
 #[cfg(feature = "cedar")]
 pub use rbac::PolicySet;
 pub use rbac::{Role, RoleHierarchy};
