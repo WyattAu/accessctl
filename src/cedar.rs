@@ -39,6 +39,10 @@ pub fn generate_schema() -> &'static str {
 }
 
 /// Create Cedar entities for a user with a role.
+// cedar 4.7: the `from_str` error types are uninhabited, so newer rustc
+// toolchains see the `map_err` closures as unreachable; older ones do not.
+// Portable allowance until the estate toolchain floor catches up.
+#[allow(unreachable_code)]
 pub fn create_entities(user_id: &str, role: &Role) -> Result<Entities, crate::AccessError> {
     let role_uid = EntityUid::from_type_name_and_id(
         EntityTypeName::from_str(role.cedar_type_name())
