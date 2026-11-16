@@ -248,8 +248,7 @@ impl GrantLedger {
     /// revoked minus attenuated. Checked after every operation in the
     /// property tests; exposed so hosts can assert it too.
     pub fn invariant_holds(&self) -> bool {
-        self.outstanding()
-            == self.issued_total - self.revoked_total - self.attenuated_total
+        self.outstanding() == self.issued_total - self.revoked_total - self.attenuated_total
     }
 
     /// Total active amount held by one subject.
@@ -270,6 +269,7 @@ impl GrantLedger {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)] // tests: construction results are asserted via unwrap
 mod tests {
     use super::*;
 
