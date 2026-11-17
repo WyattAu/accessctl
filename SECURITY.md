@@ -9,7 +9,7 @@
 
 ## Reporting a Vulnerability
 
-**Do not open a public issue.** Email **wyatt_au@protonmail.com** with:
+**Do not open a public issue.** Email **<wyatt_au@protonmail.com>** with:
 
 1. Affected crate + version
 2. A minimal reproduction or proof-of-concept
